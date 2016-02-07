@@ -51,6 +51,18 @@ def selectHistoryUI(mainSelDict):
                 c= lambda *args: selectHistoryCommand(mainSelDict, command="select"), 
                 parent = mainLayout)
     
+    cycleButtonLayout = cmds.rowLayout("cycButLayout", numberOfColumns=2, w=windowWidth, parent=mainLayout)
+    cmds.button("cycBack", label="<< Cycle Backward", 
+                backgroundColor=[0.58823531866073608, 0.57949936389923096, 0.48442909121513367], 
+                width=windowWidth/2, 
+                c=lambda *args: selectHistoryCommand(mainSelDict, command="cycle", iterDir="backward"), 
+                parent=cycleButtonLayout)
+    cmds.button("cycForward", label="Cycle Forward >>", 
+                backgroundColor=[0.58823531866073608, 0.57949936389923096, 0.48442909121513367], 
+                width=windowWidth/2, 
+                c=lambda *args: selectHistoryCommand(mainSelDict, command="cycle"), 
+                parent=cycleButtonLayout)
+    
     cmds.separator(parent=mainLayout)
     
     cmds.text(label="Nickname (Alias) for Selection: ", parent=mainLayout, width=windowWidth, align="center")
@@ -67,11 +79,17 @@ def selectHistoryUI(mainSelDict):
     
     cmds.showWindow(selectHistoryWindow)
 
-def selectHistoryCommand(mainSelDict, command="add"):
+def selectHistoryCommand(mainSelDict, command="add", iterDir="forward"):
+    
+    # dictionary setup: {"listKey": [[objects], id]} -> where id is a pointer for cycle purposes, which entry should be accessed
     
     if command == "add":
         nickname = cmds.textField("selNickname", text=1, q=1)
         selection = cmds.ls(sl=1, fl=1)
+        
+        if len( selection ) == 0:
+            cmds.error("Nothing selected.")
+        
         if nickname == "":
             nickname = "[{0} : {1}]".format(selection[0], selection[-1])
         else:
@@ -79,7 +97,7 @@ def selectHistoryCommand(mainSelDict, command="add"):
         
         cmds.textScrollList("selectHistoryList", e=1, append=nickname)
 
-        mainSelDict[nickname] = selection
+        mainSelDict[nickname] = [selection, 0]
         
     elif command == "remove":
         indexToRemove = cmds.textScrollList("selectHistoryList", q=1, selectIndexedItem=1)
@@ -106,4 +124,39 @@ def selectHistoryCommand(mainSelDict, command="add"):
         
         indexSelected = cmds.textScrollList("selectHistoryList", q=1, selectIndexedItem=True)[0]
         itemSelected = cmds.textScrollList("selectHistoryList", q=1, selectItem=1)[0]
-        cmds.select( mainSelDict[itemSelected], add=addV, deselect= remV)
+        cmds.select( mainSelDict[itemSelected][0], add=addV, deselect= remV)
+        mainSelDict[itemSelected][1] = 0 # reset the id to 0
+    
+    elif command == "cycle":
+        if cmds.textScrollList("selectHistoryList", q=1, selectItem=True) == None:
+            cmds.error("No Nicknames Selected.")
+        
+        enumSelect = cmds.radioButtonGrp("selectType", q=1, select=1)
+        
+        if   enumSelect <= 1:
+             addV = 0
+             remV = 0
+        elif enumSelect == 2:
+             addV = 1
+             remV = 0
+        elif enumSelect == 3:
+             addV = 0
+             remV = 1
+        
+        itemSelected = cmds.textScrollList("selectHistoryList", q=1, selectItem=1)[0]
+        idPos = int( mainSelDict[itemSelected][1] )
+        
+        if iterDir == "forward":
+            idPos += 1
+        else:
+            idPos -= 1
+        
+        if idPos > len( mainSelDict[itemSelected][0] ) -1: # make sure it doesn't go outside of the object range
+            idPos = 0
+        elif idPos < 0:
+            idPos = len( mainSelDict[itemSelected][0] ) -1
+        
+        
+        mainSelDict[itemSelected][1] = idPos
+        
+        cmds.select( mainSelDict[itemSelected][0][idPos], add=addV, deselect= remV )
