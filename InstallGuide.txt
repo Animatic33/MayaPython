@@ -1,0 +1,40 @@
+Installing agMayaQuickSelect.py:
+-----------------------------------
+
+A. Common Install:
+
+1. Copy the file "agMayaQuickSelect.py" to your scripts folder
+
+2. In Maya's PYTHON Script Editor, Run (once):
+
+   globalSelectionDictionary = {}  
+   import agMayaQuickSelect as qsh
+
+
+3. When you want to use this script, Run:
+
+   qsh.selectHistoryUI(globalSelectionDictionary)
+
+
+4. (OPTIONAL) If you want to save the UI Script of to a shelf button, drag the following code
+   to the shelf:
+
+   try:
+	type(globalSelectionDictionary)
+   except:
+	globalSelectionDictionary = {}
+
+   import agMayaQuickSelect as qsh
+   qsh.selectHistoryUI(globalSelectionDictionary)
+
+5. (OPTIONAL) I've included a simple shelf icon (quickSelectIcon.png) for use.
+
+-----------------------------------------------------------------
+B. userSetup.mel Install:
+
+If you want to initialize the globalSelectionDictionary object in the userSetup.mel file, insert this
+piece of code at the bottom of that file:
+
+python("agQuickSelDict={}; import agMayaQuickSelect as qsh;");
+
+-----------------------------------------------------------------
