@@ -1,5 +1,5 @@
 """
-Quick History Selection UI for Maya (ver 0.1)
+Quick History Selection UI for Maya (ver 0.2)
 Scripting Language: PYTHON
 Development Environment: Maya 2011 x64
 
@@ -8,6 +8,7 @@ First Release: Feb 5 2016
 
 Updates:
 February 5 2016 - Initial Release (0.1)
+February 6 2016 - Cycle Feature (0.2)
 
 Readme: Readme.md
 Install Guide: InstallGuide.txt
