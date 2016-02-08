@@ -1,5 +1,5 @@
 """
-Quick History Selection UI for Maya (ver 0.2)
+Quick History Selection UI for Maya (ver 0.3)
 Scripting Language: PYTHON
 Development Environment: Maya 2011 x64
 
@@ -9,6 +9,7 @@ First Release: Feb 5 2016
 Updates:
 February 5 2016 - Initial Release (0.1)
 February 6 2016 - Cycle Feature (0.2)
+February 7 2016 - Set Feature (0.3)
 
 Readme: Readme.md
 Install Guide: InstallGuide.txt
@@ -46,11 +47,14 @@ def selectHistoryUI(mainSelDict):
     
     cmds.text(label="Modify Current Selection in Scene: ", parent=mainLayout, width=windowWidth, align="center")
     cmds.radioButtonGrp("selectType", width=windowWidth, labelArray3=['Single', 'Add', 'Remove'], select=1, numberOfRadioButtons=3 )
+    cmds.text(label="Comparitive Functions: ", parent=mainLayout, width=windowWidth, align="center")
+    cmds.radioButtonGrp("setSpecific", width=windowWidth, labelArray3=['None', 'Common', 'Difference'], select=1, numberOfRadioButtons=3 )
+
     cmds.button("SelectButton", label="Select", 
                 backgroundColor=[0.37993082404136658, 0.60194522142410278, 0.71764707565307617], 
                 width=windowWidth, 
-                c= lambda *args: selectHistoryCommand(mainSelDict, command="select"), 
-                parent = mainLayout)
+                c=lambda *args: selectHistoryCommand(mainSelDict, command="select"), 
+                parent=mainLayout)
     
     cycleButtonLayout = cmds.rowLayout("cycButLayout", numberOfColumns=2, w=windowWidth, parent=mainLayout)
     cmds.button("cycBack", label="<< Cycle Backward", 
@@ -63,6 +67,7 @@ def selectHistoryUI(mainSelDict):
                 width=windowWidth/2, 
                 c=lambda *args: selectHistoryCommand(mainSelDict, command="cycle"), 
                 parent=cycleButtonLayout)
+    
     
     cmds.separator(parent=mainLayout)
     
@@ -82,7 +87,7 @@ def selectHistoryUI(mainSelDict):
 
 def selectHistoryCommand(mainSelDict, command="add", iterDir="forward"):
     
-    # dictionary setup: {"listKey": [[objects], id]} -> where id is a pointer for cycle purposes, which entry should be accessed
+    # dictionary setup: {"listKey": [set( [objects] ), id]} -> where id is a pointer for cycle purposes, which entry should be accessed
     
     if command == "add":
         nickname = cmds.textField("selNickname", text=1, q=1)
@@ -97,22 +102,23 @@ def selectHistoryCommand(mainSelDict, command="add", iterDir="forward"):
             nickname += " [{0} : {1}]".format(selection[0], selection[-1])
         
         cmds.textScrollList("selectHistoryList", e=1, append=nickname)
-
-        mainSelDict[nickname] = [selection, 0]
+        
+        mainSelDict[nickname] = [set(selection), 0]
         
     elif command == "remove":
         indexToRemove = cmds.textScrollList("selectHistoryList", q=1, selectIndexedItem=1)
         nameToRemove = cmds.textScrollList("selectHistoryList", q=1, selectItem=1)[0]
         cmds.textScrollList("selectHistoryList", e=1, removeIndexedItem=indexToRemove)
-        
-        del mainSelDict[nameToRemove]
+        try:
+            del mainSelDict[nameToRemove]
+        except:
+            cmds.error("Looks like {0} doesn't exist in the global dictionary.".format(itemSelected))
         
     elif command == "select":
         if cmds.textScrollList("selectHistoryList", q=1, selectItem=True) == None:
             cmds.error("No Nicknames Selected.")
         
         enumSelect = cmds.radioButtonGrp("selectType", q=1, select=1)
-        
         if   enumSelect <= 1:
              addV = 0
              remV = 0
@@ -125,9 +131,23 @@ def selectHistoryCommand(mainSelDict, command="add", iterDir="forward"):
         
         indexSelected = cmds.textScrollList("selectHistoryList", q=1, selectIndexedItem=True)[0]
         itemSelected = cmds.textScrollList("selectHistoryList", q=1, selectItem=1)[0]
-        cmds.select( mainSelDict[itemSelected][0], add=addV, deselect= remV)
-        mainSelDict[itemSelected][1] = 0 # reset the id to 0
-    
+        
+        compareSelect = cmds.radioButtonGrp("setSpecific", q=1, select=1) # set-based comparative functions
+        if compareSelect <= 1:
+            selectionToMake = mainSelDict[itemSelected][0]
+        elif compareSelect == 2: # if user wants to only get common elements
+            selectionToMake = set(cmds.ls(sl=1, fl=1)) & mainSelDict[itemSelected][0]
+        elif compareSelect == 3:
+            selectionToMake = set(cmds.ls(sl=1, fl=1)) ^ mainSelDict[itemSelected][0]
+        
+        selectionToMake = list(selectionToMake)
+        
+        try:
+            cmds.select( selectionToMake, add=addV, deselect= remV)
+            mainSelDict[itemSelected][1] = 0 # reset the id to 0
+        except:
+            return None
+            
     elif command == "cycle":
         if cmds.textScrollList("selectHistoryList", q=1, selectItem=True) == None:
             cmds.error("No Nicknames Selected.")
@@ -157,7 +177,7 @@ def selectHistoryCommand(mainSelDict, command="add", iterDir="forward"):
         elif idPos < 0:
             idPos = len( mainSelDict[itemSelected][0] ) -1
         
-        
+                
         mainSelDict[itemSelected][1] = idPos
         
         cmds.select( mainSelDict[itemSelected][0][idPos], add=addV, deselect= remV )
