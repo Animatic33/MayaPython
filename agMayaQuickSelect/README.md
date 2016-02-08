@@ -1,5 +1,5 @@
-﻿Quick History Selection UI for Maya (ver 0.4)
-
+Quick History Selection UI for Maya (ver 0.4)
+===
 Scripting Language: PYTHON
 
 Development Environment: Maya 2011 x64
@@ -13,11 +13,10 @@ Updates:
 *   February 5 2016 - Initial Release (0.1)
 *   February 6 2016 - Cycles Feature (0.2)
 *   February 7 2016 - Set Functions (0.3)
-                    - Organization (0.4)
+*                   - Organization (0.4)
 
 -------------------
 *   Q: What does this do?
-
     Quick History Selection opens up a window that can temporarily hold selection sets (not the built-in Maya sets) that you can easily toggle between.
 *   Q: Why not just use regular quick selection sets?
 
