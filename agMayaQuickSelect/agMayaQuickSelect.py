@@ -1,5 +1,5 @@
 """
-Quick History Selection UI for Maya (ver 0.3)
+Quick History Selection UI for Maya (ver 0.4)
 Scripting Language: PYTHON
 Development Environment: Maya 2011 x64
 
@@ -10,6 +10,7 @@ Updates:
 February 5 2016 - Initial Release (0.1)
 February 6 2016 - Cycle Feature (0.2)
 February 7 2016 - Set Feature (0.3)
+                - List Organization (0.4)
 
 Readme: Readme.md
 Install Guide: InstallGuide.txt
@@ -33,13 +34,18 @@ def selectHistoryUI(mainSelDict):
     
     cmds.text(label="Selection History Recorded: ", parent=mainLayout, width=windowWidth, align="center")
     
-    cmds.textScrollList("selectHistoryList", 
-                        deleteKeyCommand=lambda *args: selectHistoryCommand(mainSelDict, command="remove"), 
-                        doubleClickCommand= lambda *args: selectHistoryCommand(mainSelDict, command="select"),
-                        annotation="Tip: 'Double-click' to Select or 'Delete' key to Remove Selected Entry ", 
-                        width=windowWidth, 
-                        numberOfRows=8, 
-                        parent=mainLayout)
+    selectHistoryLst = cmds.textScrollList("selectHistoryList", 
+                                           deleteKeyCommand=lambda *args: selectHistoryCommand(mainSelDict, command="remove"), 
+                                           doubleClickCommand= lambda *args: selectHistoryCommand(mainSelDict, command="select"),
+                                           annotation="Tip: 'Double-click' to Select or 'Delete' key to Remove Selected Entry ", 
+                                           width=windowWidth, 
+                                           numberOfRows=8, 
+                                           parent=mainLayout)
+    
+    optionPopup = cmds.popupMenu(parent=selectHistoryLst)
+    cmds.menuItem(label="Sort Ascending", command= lambda *args: selectHistoryOrganize(mainSelDict, order="alpha"))
+    cmds.menuItem(label="Sort Descending", command= lambda *args: selectHistoryOrganize(mainSelDict, order="alpha_ZA"))
+    cmds.menuItem(label="Sort by Added", command= lambda *args: selectHistoryOrganize(mainSelDict, order="added"))
     
     if len( mainSelDict.keys() ) > 0:
         for key in mainSelDict.keys():
@@ -85,6 +91,20 @@ def selectHistoryUI(mainSelDict):
     
     cmds.showWindow(selectHistoryWindow)
 
+def selectHistoryOrganize(mainSelDict, order="alpha"): # organization is purely UI based. Do not touch the dictionary
+    listOfSel = cmds.textScrollList("selectHistoryList", q=1, allItems=1)
+    if "alpha" in order:
+        if "_ZA" in order:
+            listOfSel.sort(reverse=True)  # sort method returns none
+        else:
+            listOfSel.sort()
+    elif order == "added":
+        listOfSel = mainSelDict.keys()
+    
+    cmds.textScrollList("selectHistoryList", e=1, removeAll=1)
+    cmds.textScrollList("selectHistoryList", e=1, append=listOfSel)
+        
+    
 def selectHistoryCommand(mainSelDict, command="add", iterDir="forward"):
     
     # dictionary setup: {"listKey": [set( [objects] ), id]} -> where id is a pointer for cycle purposes, which entry should be accessed
@@ -166,6 +186,7 @@ def selectHistoryCommand(mainSelDict, command="add", iterDir="forward"):
         
         itemSelected = cmds.textScrollList("selectHistoryList", q=1, selectItem=1)[0]
         idPos = int( mainSelDict[itemSelected][1] )
+        
         
         if iterDir == "forward":
             idPos += 1

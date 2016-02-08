@@ -1,4 +1,4 @@
-﻿Quick History Selection UI for Maya (ver 0.3)
+﻿Quick History Selection UI for Maya (ver 0.4)
 
 Scripting Language: PYTHON
 
@@ -10,9 +10,10 @@ First Release: Feb 5 2016
 
 Updates:
 
-February 5 2016 - Initial Release (0.1)
-February 6 2016 - Cycles Feature (0.2)
-February 7 2016 - Set Functions (0.3)
+*   February 5 2016 - Initial Release (0.1)
+*   February 6 2016 - Cycles Feature (0.2)
+*   February 7 2016 - Set Functions (0.3)
+                    - Organization (0.4)
 
 -------------------
 *   Q: What does this do?
