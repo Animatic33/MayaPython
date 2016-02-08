@@ -180,4 +180,4 @@ def selectHistoryCommand(mainSelDict, command="add", iterDir="forward"):
                 
         mainSelDict[itemSelected][1] = idPos
         
-        cmds.select( mainSelDict[itemSelected][0][idPos], add=addV, deselect= remV )
+        cmds.select( list( mainSelDict[itemSelected][0] )[idPos], add=addV, deselect= remV ) # cast as a list first in order to use the idPos
