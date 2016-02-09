@@ -1,5 +1,5 @@
 """
-Quick History Selection UI for Maya (ver 0.4)
+Quick History Selection UI for Maya (ver 0.45)
 Scripting Language: PYTHON
 Development Environment: Maya 2011 x64
 
@@ -11,6 +11,7 @@ February 5 2016 - Initial Release (0.1)
 February 6 2016 - Cycle Feature (0.2)
 February 7 2016 - Set Feature (0.3)
                 - List Organization (0.4)
+February 8 2016 - Sort by Type (0.45)
 
 Readme: Readme.md
 Install Guide: InstallGuide.txt
@@ -46,6 +47,7 @@ def selectHistoryUI(mainSelDict):
     cmds.menuItem(label="Sort Ascending", command= lambda *args: selectHistoryOrganize(mainSelDict, order="alpha"))
     cmds.menuItem(label="Sort Descending", command= lambda *args: selectHistoryOrganize(mainSelDict, order="alpha_ZA"))
     cmds.menuItem(label="Sort by Added", command= lambda *args: selectHistoryOrganize(mainSelDict, order="added"))
+    cmds.menuItem(label="Sort by Type", command= lambda *args: selectHistoryOrganize(mainSelDict, order="type"))
     
     if len( mainSelDict.keys() ) > 0:
         for key in mainSelDict.keys():
@@ -100,6 +102,17 @@ def selectHistoryOrganize(mainSelDict, order="alpha"): # organization is purely 
             listOfSel.sort()
     elif order == "added":
         listOfSel = mainSelDict.keys()
+    elif order == "type":
+        tempTypeList = []
+        for x in listOfSel: # get a list of [element, type]
+            tempTypeList.append( [x, mainSelDict[x][2]] )
+        tempTypeList.sort(key=lambda typeN: typeN[1])
+        
+        newSortedList = []
+        for x in tempTypeList:
+            newSortedList.append(x[0])
+        
+        listOfSel = newSortedList
     
     cmds.textScrollList("selectHistoryList", e=1, removeAll=1)
     cmds.textScrollList("selectHistoryList", e=1, append=listOfSel)
@@ -112,6 +125,7 @@ def selectHistoryCommand(mainSelDict, command="add", iterDir="forward"):
     if command == "add":
         nickname = cmds.textField("selNickname", text=1, q=1)
         selection = cmds.ls(sl=1, fl=1)
+        typeOfSel = cmds.nodeType(selection[0]) # rough idea of what type the selection is, can be mixed type with groups of things, but focus on the first element
         
         if len( selection ) == 0:
             cmds.error("Nothing selected.")
@@ -123,7 +137,7 @@ def selectHistoryCommand(mainSelDict, command="add", iterDir="forward"):
         
         cmds.textScrollList("selectHistoryList", e=1, append=nickname)
         
-        mainSelDict[nickname] = [set(selection), 0]
+        mainSelDict[nickname] = [set(selection), 0, typeOfSel]
         
     elif command == "remove":
         indexToRemove = cmds.textScrollList("selectHistoryList", q=1, selectIndexedItem=1)
