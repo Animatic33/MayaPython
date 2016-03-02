@@ -1,5 +1,5 @@
 """
-Quick History Selection UI for Maya (ver 0.45)
+Quick History Selection UI for Maya (ver 0.5)
 Scripting Language: PYTHON
 Development Environment: Maya 2011 x64
 
@@ -12,13 +12,22 @@ February 6 2016 - Cycle Feature (0.2)
 February 7 2016 - Set Feature (0.3)
                 - List Organization (0.4)
 February 8 2016 - Sort by Type (0.45)
+March 3 2016    = Feature Add:
+                - Add/Remove to Sets
+                - Dockable
+                - Find/Replace
+                - Export/Import to JSON file
+                = Modify:
+                - adding to a set now adds a sorted(list)
 
 Readme: Readme.md
 Install Guide: InstallGuide.txt
 """
 import maya.cmds as cmds
+import agUtils
+import jsonFolderDir
 
-def selectHistoryUI(mainSelDict):
+def selectHistoryUI(mainSelDict, dock=False):
     windowWidth = 300
     windowHeight = 350
     horizontalSpacing = int(windowHeight * 0.01)
@@ -27,11 +36,34 @@ def selectHistoryUI(mainSelDict):
     if cmds.window("selectHistory", q=1, exists=True):
         cmds.deleteUI("selectHistory")
     
+    if cmds.dockControl("selectionHistoryDock", q=1, exists=1) == True:
+            cmds.deleteUI("selectionHistoryDock")
+    
     selectHistoryWindow = cmds.window("selectHistory", title = "Selection History",
                                       w=windowWidth, h=windowHeight,
-                                      mnb=True, mxb=False, sizeable=False)
+                                      mnb=True, mxb=False, sizeable=False, menuBar=True)
+                                      
+    selectHistoryMenu = cmds.menu("selectHistoryUIMenu", label="File", parent=selectHistoryWindow)
+    cmds.menuItem(label="Export Selection Set to JSON", command=lambda *args: selHistoryJSON(mainSelDict, method="export"), parent=selectHistoryMenu)
+    cmds.menuItem(label="Import Selection Set", command=lambda *args: selHistoryJSON(mainSelDict, method="import"), parent=selectHistoryMenu)
+    
     #layout
     mainLayout = cmds.columnLayout("selhisLayout", rowSpacing=horizontalSpacing, w=windowWidth, h=windowHeight)
+    
+    cmds.separator(parent=mainLayout)
+    cmds.text(label="Nickname (Alias) for Selection: ", parent=mainLayout, width=windowWidth, align="center")
+    reqName = cmds.textField("selNickname", width=windowWidth, 
+                             annotation="Tip: Keypad 'Enter' key to add entry", 
+                             enterCommand=lambda *args: selectHistoryCommand(mainSelDict, command="add"), 
+                             parent=mainLayout)
+    
+    cmds.button("AddSelection", label="Add New Selection", 
+                backgroundColor=[0.46045002341270447, 0.81176471710205078, 0.41065746545791626], 
+                width=windowWidth, 
+                c= lambda *args: selectHistoryCommand(mainSelDict, command="add"), 
+                parent = mainLayout)
+                
+    cmds.separator(parent=mainLayout, width=windowWidth, height=10)
     
     cmds.text(label="Selection History Recorded: ", parent=mainLayout, width=windowWidth, align="center")
     
@@ -78,21 +110,56 @@ def selectHistoryUI(mainSelDict):
     
     
     cmds.separator(parent=mainLayout)
+    mirrorOpLyt = cmds.rowColumnLayout("mirrorOpLyt", numberOfColumns=3, columnWidth=[[1,(windowWidth/2)-5],[2, (windowWidth/2)-10], [3, 15]], width=windowWidth, height=50, parent=mainLayout)
+    cmds.text(label="Find", height=25)
+    cmds.text(label="Replace", height=25)
+    cmds.text(label="", height=25)
+    cmds.textField("originalPrefix", width=(windowWidth/3), height=20, parent=mirrorOpLyt)
+    cmds.textField("mirrorPrefix", width=(windowWidth/3), height=20, parent=mirrorOpLyt)
+    cmds.checkBox("mirrorSelCB",label="Mirror", parent=mirrorOpLyt)
     
-    cmds.text(label="Nickname (Alias) for Selection: ", parent=mainLayout, width=windowWidth, align="center")
-    reqName = cmds.textField("selNickname", width=windowWidth, 
-                             annotation="Tip: Keypad 'Enter' key to add entry", 
-                             enterCommand=lambda *args: selectHistoryCommand(mainSelDict, command="add"), 
-                             parent=mainLayout)
     
-    cmds.button("AddSelection", label="Add Selection", 
-                backgroundColor=[0.46045002341270447, 0.81176471710205078, 0.41065746545791626], 
-                width=windowWidth, 
-                c= lambda *args: selectHistoryCommand(mainSelDict, command="add"), 
-                parent = mainLayout)
     
-    cmds.showWindow(selectHistoryWindow)
+    
+    # Add/Remove from Selection Buttons
+    modSelLyt = cmds.rowColumnLayout("modifySelLyt", numberOfColumns=2, width=windowWidth, height=25, parent=mainLayout)
+    cmds.button("AddToSelection", label="Add To Selection",  
+                backgroundColor=[0.49328723549842834, 0.63529413938522339, 0.5444866418838501], 
+                width=windowWidth/2, 
+                c= lambda *args: selectHistoryCommand(mainSelDict, command="addTo"), 
+                parent = modSelLyt)
+                
+    cmds.button("RemoveFromSelection", label="Remove From Selection",
+                backgroundColor=[0.68235296010971069, 0.56193774938583374, 0.56193774938583374], 
+                width=windowWidth/2, 
+                c= lambda *args: selectHistoryCommand(mainSelDict, command="removeFrom"), 
+                parent = modSelLyt)
+    
+    if dock != True:
+        cmds.showWindow(selectHistoryWindow)
+    else:
+        allowedAreas = ['right', 'left']
+        cmds.dockControl("selectionHistoryDock", area='left', label="Selection History", content=selectHistoryWindow, allowedArea=allowedAreas )
 
+def selHistoryJSON(mainSelDict, method="export", fileNameDir=""):
+    if fileNameDir == "":
+        fileNameDir = jsonFolderDir.dir
+    if method == "export":
+        newDict = {}
+        for key in mainSelDict.keys(): #strip out the sets for JSON serialization
+            newDict[key] = [list(mainSelDict[key][0]), mainSelDict[key][1]]
+        
+        agUtils.writeJsonFile(dataToWrite=newDict, fileName=fileNameDir + "selHistoryJSON.json")
+    else:
+        dataToImport = agUtils.readJsonFile(fileName= fileNameDir + "selHistoryJSON.json")
+        for key in dataToImport.keys():
+            dataToImport[key] = [set(dataToImport[key][0]),dataToImport[key][1]] # turn back into sets
+            mainSelDict[key] = dataToImport[key]
+            
+        cmds.textScrollList("selectHistoryList", e=1, removeAll=True)
+        cmds.textScrollList("selectHistoryList", e=1, append=dataToImport.keys())
+    
+    
 def selectHistoryOrganize(mainSelDict, order="alpha"): # organization is purely UI based. Do not touch the dictionary
     listOfSel = cmds.textScrollList("selectHistoryList", q=1, allItems=1)
     if "alpha" in order:
@@ -116,7 +183,6 @@ def selectHistoryOrganize(mainSelDict, order="alpha"): # organization is purely 
     
     cmds.textScrollList("selectHistoryList", e=1, removeAll=1)
     cmds.textScrollList("selectHistoryList", e=1, append=listOfSel)
-        
     
 def selectHistoryCommand(mainSelDict, command="add", iterDir="forward"):
     
@@ -137,7 +203,7 @@ def selectHistoryCommand(mainSelDict, command="add", iterDir="forward"):
         
         cmds.textScrollList("selectHistoryList", e=1, append=nickname)
         
-        mainSelDict[nickname] = [set(selection), 0, typeOfSel]
+        mainSelDict[nickname] = [set(sorted(selection)), 0, typeOfSel]
         
     elif command == "remove":
         indexToRemove = cmds.textScrollList("selectHistoryList", q=1, selectIndexedItem=1)
@@ -175,6 +241,13 @@ def selectHistoryCommand(mainSelDict, command="add", iterDir="forward"):
             selectionToMake = set(cmds.ls(sl=1, fl=1)) ^ mainSelDict[itemSelected][0]
         
         selectionToMake = list(selectionToMake)
+        
+        if cmds.checkBox("mirrorSelCB", q=1, value=1): # mirror sel option
+            originalPrefixVal = cmds.textField("originalPrefix", q=1, text=1)
+            mirrorPrefixVal = cmds.textField("mirrorPrefix", q=1, text=1)
+            
+            for n in range(len(selectionToMake)):
+                selectionToMake[n] = selectionToMake[n].replace( originalPrefixVal, mirrorPrefixVal )
         
         try:
             cmds.select( selectionToMake, add=addV, deselect= remV)
@@ -216,3 +289,13 @@ def selectHistoryCommand(mainSelDict, command="add", iterDir="forward"):
         mainSelDict[itemSelected][1] = idPos
         
         cmds.select( list( mainSelDict[itemSelected][0] )[idPos], add=addV, deselect= remV ) # cast as a list first in order to use the idPos
+    
+    elif command == "addTo":
+        selectionToEdit = cmds.textScrollList("selectHistoryList", q=1, selectItem=True)[0]
+        mainSelDict[selectionToEdit][0].update( cmds.ls(sl=1, fl=1) )
+        
+    elif command == "removeFrom":
+        selectionToEdit = cmds.textScrollList("selectHistoryList", q=1, selectItem=True)[0]
+        mainSelDict[selectionToEdit][0].difference_update(cmds.ls(sl=1, fl=1) )
+        
+        

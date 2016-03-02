@@ -1,4 +1,4 @@
-Quick History Selection UI for Maya (ver 0.45)
+Quick History Selection UI for Maya (ver 0.5)
 ===
 Scripting Language: PYTHON
 
@@ -15,6 +15,13 @@ Updates:
 *   February 7 2016 - Set Functions (0.3)
 *                   - Organization (0.4)
 *   February 8 2016 - Sort by Type (0.45)
+*   March 3 2016    - Feature Add: (0.5)
+                    - Add/Remove to Sets
+                    - Dockable
+                    - Find/Replace
+                    - Export/Import to JSON file
+                    - Modify:
+                    - adding to a set now adds a sorted(list)
 
 -------------------
 *   Q: What does this do?

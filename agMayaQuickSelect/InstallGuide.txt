@@ -3,7 +3,13 @@ Installing agMayaQuickSelect.py:
 
 A. Common Install:
 
-1. Copy the file "agMayaQuickSelect.py" to your scripts folder
+1. Copy the files "agMayaQuickSelect.py" to your scripts folder
+			      "jsonFolderLocation.py"
+				  "agUtils.py"
+
+2. If you want to use the JSON file export/import function of the script, 
+   edit the value found in "jsonFolderLocation.py". Make sure to include the
+   trailing / at the end of the directory.
 
 2. In Maya's PYTHON Script Editor, Run (once):
 
