@@ -21,7 +21,7 @@ Updates:
 
 -------------------
 Further Notes:
-- See my tutorial on my website to learn about how this script works. http://www.aganimator.com/tutorials/2016/1/14/saving-mayas-skin-weights-to-json
+- See my tutorial on my website to learn about how this script works. http://www.aganimator.com/tutorials/2016/2/19/saving-mayas-skin-weights-to-json
 
 -------------------
 Install:
