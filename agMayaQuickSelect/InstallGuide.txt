@@ -19,19 +19,19 @@ A. Common Install:
 
 3. When you want to use this script, Run:
 
-   qsh.selectHistoryUI(globalSelectionDictionary)
+   qsh.selectHistoryUI(globalSelectionDictionary, dock=1)
 
 
-4. (OPTIONAL) If you want to save the UI Script of to a shelf button, drag the following code
-   to the shelf:
+4. (OPTIONAL) If you want to save the UI Script of to a shelf button: copy this code into a Python tab in the script editor, 
+	then middle mouse drag the selection on to the shelf:
 
-   try:
+try:
 	type(globalSelectionDictionary)
-   except:
+except:
 	globalSelectionDictionary = {}
 
-   import agMayaQuickSelect as qsh
-   qsh.selectHistoryUI(globalSelectionDictionary)
+import agMayaQuickSelect as qsh
+qsh.selectHistoryUI(globalSelectionDictionary, dock=1)
 
 5. (OPTIONAL) I've included a simple shelf icon (quickSelectIcon.png) for use.
 
