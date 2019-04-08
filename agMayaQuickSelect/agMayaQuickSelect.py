@@ -143,7 +143,7 @@ def selectHistoryUI(mainSelDict, dock=False):
 
 def selHistoryJSON(mainSelDict, method="export", fileNameDir=""):
     if fileNameDir == "":
-        fileNameDir = jsonFolderDir.dir
+        fileNameDir = jsonFolderLocation.dir
     if method == "export":
         newDict = {}
         for key in mainSelDict.keys(): #strip out the sets for JSON serialization
