@@ -26,6 +26,7 @@ Install Guide: InstallGuide.txt
 import maya.cmds as cmds
 import agUtils
 import jsonFolderLocation
+reload(jsonFolderLocation)
 
 def selectHistoryUI(mainSelDict, dock=False):
     windowWidth = 300
