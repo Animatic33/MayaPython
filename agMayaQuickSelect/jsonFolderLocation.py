@@ -1,2 +1,4 @@
 # make sure to include the trailing / at the end
-dir = "./"
+# this should be a directory (ie. D:/3dProjects/MyProject/JSON/) 
+
+dir = "./" 
