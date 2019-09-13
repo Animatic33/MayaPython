@@ -26,8 +26,8 @@ Further Notes:
 -------------------
 Install:
 
-Place both scripts in your scripts folder, then run in the scripts editor:
-""
+Place both scripts in your `Documents/maya/VERSION/scripts` folder, then run in the Python script editor tab:
+```python
 import agJsonSkinTool
 agJsonSkinTool.jsonWeightsUI()
-""
+```
